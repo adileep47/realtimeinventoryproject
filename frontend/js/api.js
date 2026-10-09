@@ -53,8 +53,9 @@ const API = {
                 }
                 return await response.blob();
             }
-
-            const data = await response.json();
+const text = await response.text();
+const data = text ? JSON.parse(text) : {};
+           ;
 
             if (!response.ok) {
                 if (response.status === 401) {
