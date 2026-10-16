@@ -1,0 +1,1467 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Stock Master – Inventory Management System</title>
+  <meta name="description" content="Production-quality Inventory Management System featuring real-time stock tracking, analytics, and PDF exports."/>
+  <style>
+    @layer base {
+      html,body { margin:0; padding:0; }
+      body { overscroll-behavior:none; }
+      main > :first-child { margin-top:0!important; }
+      main > :last-child { margin-bottom:0!important; }
+    }
+    ::-webkit-scrollbar { display:none; }
+  </style>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script id="tailwind-config">
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          colors: {
+            "surface": "#fbf8fa",
+            "surface-tint": "#545f73",
+            "surface-container-low": "#f5f3f4",
+            "secondary-fixed": "#d4e6e5",
+            "primary": "#091426",
+            "on-primary-container": "#8590a6",
+            "on-primary": "#ffffff",
+            "surface-bright": "#fbf8fa",
+            "secondary-fixed-dim": "#b8cac9",
+            "on-secondary": "#ffffff",
+            "outline-variant": "#c5c6cd",
+            "on-tertiary-fixed-variant": "#3a4858",
+            "on-tertiary-container": "#8391a3",
+            "inverse-surface": "#303032",
+            "tertiary-fixed": "#d5e4f8",
+            "on-surface-variant": "#45474c",
+            "inverse-primary": "#bcc7de",
+            "background": "#fbf8fa",
+            "inverse-on-surface": "#f3f0f2",
+            "surface-container-highest": "#e4e2e3",
+            "on-secondary-container": "#576867",
+            "on-error": "#ffffff",
+            "on-primary-fixed-variant": "#3c475a",
+            "on-error-container": "#93000a",
+            "on-tertiary-fixed": "#0e1d2b",
+            "tertiary-container": "#1c2a39",
+            "surface-container-high": "#eae7e9",
+            "on-surface": "#1b1b1d",
+            "on-primary-fixed": "#111c2d",
+            "primary-fixed-dim": "#bcc7de",
+            "primary-fixed": "#d8e3fb",
+            "surface-variant": "#e4e2e3",
+            "surface-container": "#f0edef",
+            "secondary-container": "#d4e6e5",
+            "on-secondary-fixed": "#0e1e1e",
+            "tertiary": "#061623",
+            "outline": "#75777d",
+            "surface-container-lowest": "#ffffff",
+            "surface-dim": "#dcd9db",
+            "secondary": "#516161",
+            "on-background": "#1b1b1d",
+            "tertiary-fixed-dim": "#b9c8db",
+            "error-container": "#ffdad6",
+            "error": "#ba1a1a",
+            "on-secondary-fixed-variant": "#3a4a49",
+            "on-tertiary": "#ffffff",
+            "primary-container": "#1e293b"
+          },
+          borderRadius: {
+            DEFAULT: "0.25rem", lg: "0.5rem", xl: "0.75rem", full: "9999px"
+          },
+          spacing: {
+            "section-padding": "48px", "container-max": "1440px",
+            "stack-md": "16px", "gutter": "24px", "stack-sm": "8px",
+            "stack-lg": "32px", "margin-page": "40px"
+          },
+          fontFamily: {
+            "headline-lg-mobile": ["Inter"],
+            "label-md": ["Inter"], "headline-lg": ["Inter"],
+            "display-lg": ["Inter"], "body-lg": ["Inter"],
+            "headline-md": ["Inter"], "body-md": ["Inter"]
+          },
+          fontSize: {
+            "headline-lg-mobile": ["24px", { lineHeight: "32px", fontWeight: "600" }],
+            "label-md": ["12px", { lineHeight: "16px", letterSpacing: "0.05em", fontWeight: "600" }],
+            "headline-lg": ["28px", { lineHeight: "36px", letterSpacing: "-0.01em", fontWeight: "600" }],
+            "display-lg": ["36px", { lineHeight: "44px", letterSpacing: "-0.02em", fontWeight: "700" }],
+            "body-lg": ["16px", { lineHeight: "24px", fontWeight: "400" }],
+            "headline-md": ["20px", { lineHeight: "28px", fontWeight: "600" }],
+            "body-md": ["14px", { lineHeight: "20px", fontWeight: "400" }]
+          }
+        }
+      }
+    }
+  </script>
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" rel="stylesheet"/>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap" rel="stylesheet"/>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    /* Toast animations */
+    @keyframes slideInRight { from { opacity:0; transform:translateX(60px); } to { opacity:1; transform:translateX(0); } }
+    .toast-enter { animation: slideInRight 0.3s ease-out; }
+    @keyframes fadeInUp { from { opacity:0; transform:translateY(12px); } to { opacity:1; transform:translateY(0); } }
+    .view-enter { animation: fadeInUp 0.25s ease-out; }
+    .modal-backdrop { backdrop-filter: blur(6px); }
+  </style>
+</head>
+<body class="bg-background font-body-md text-on-surface">
+
+<!-- ══════════════ AUTH SCREEN ══════════════ -->
+<div id="auth-screen" class="min-h-screen flex items-center justify-center bg-gradient-to-br from-background via-surface-container-low to-secondary-fixed/20 p-4">
+  <div class="w-full max-w-md">
+    <div class="text-center mb-8">
+      <div class="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-primary mb-4 shadow-lg">
+        <span class="material-symbols-outlined text-on-primary text-3xl">inventory_2</span>
+      </div>
+      <h1 class="text-headline-lg font-headline-lg text-on-surface">Stock Master</h1>
+      <p class="text-body-md text-on-surface-variant mt-1">Inventory Control & Analytics System</p>
+    </div>
+
+    <!-- Login Form -->
+    <div id="login-card" class="bg-surface-container-lowest rounded-2xl border border-outline-variant/30 shadow-xl p-8">
+      <h2 class="text-headline-md font-headline-md text-on-surface mb-6">Sign In</h2>
+      <form id="login-form" class="space-y-4">
+        <div>
+          <label class="block text-label-md text-label-md text-on-surface-variant mb-1.5">USERNAME OR EMAIL</label>
+          <div class="relative">
+            <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant/50 text-[20px]">person</span>
+            <input id="login-username" type="text" placeholder="admin or staff" required class="w-full pl-10 pr-4 py-3 rounded-lg bg-surface-container-low border border-outline-variant/30 text-body-md text-on-surface placeholder:text-on-surface-variant/50 focus:outline-none focus:border-secondary focus:ring-1 focus:ring-secondary/30 transition"/>
+          </div>
+        </div>
+        <div>
+          <label class="block text-label-md text-label-md text-on-surface-variant mb-1.5">PASSWORD</label>
+          <div class="relative">
+            <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant/50 text-[20px]">lock</span>
+            <input id="login-password" type="password" placeholder="••••••••" required class="w-full pl-10 pr-4 py-3 rounded-lg bg-surface-container-low border border-outline-variant/30 text-body-md text-on-surface placeholder:text-on-surface-variant/50 focus:outline-none focus:border-secondary focus:ring-1 focus:ring-secondary/30 transition"/>
+          </div>
+        </div>
+        <button type="submit" class="w-full py-3 rounded-lg bg-primary text-on-primary font-semibold text-body-md hover:opacity-90 transition shadow-md mt-2">Sign In</button>
+      </form>
+      <p class="text-center text-body-md text-on-surface-variant mt-5">Don't have an account? <a href="#" onclick="toggleAuth('register')" class="text-secondary font-semibold hover:underline">Register</a></p>
+    </div>
+
+    <!-- Register Form -->
+    <div id="register-card" class="hidden bg-surface-container-lowest rounded-2xl border border-outline-variant/30 shadow-xl p-8">
+      <h2 class="text-headline-md font-headline-md text-on-surface mb-6">Create Account</h2>
+      <form id="register-form" class="space-y-4">
+        <div>
+          <label class="block text-label-md text-label-md text-on-surface-variant mb-1.5">USERNAME</label>
+          <input id="reg-username" type="text" placeholder="Choose a username" required class="w-full px-4 py-3 rounded-lg bg-surface-container-low border border-outline-variant/30 text-body-md text-on-surface placeholder:text-on-surface-variant/50 focus:outline-none focus:border-secondary focus:ring-1 focus:ring-secondary/30 transition"/>
+        </div>
+        <div>
+          <label class="block text-label-md text-label-md text-on-surface-variant mb-1.5">EMAIL ADDRESS</label>
+          <input id="reg-email" type="email" placeholder="user@company.com" required class="w-full px-4 py-3 rounded-lg bg-surface-container-low border border-outline-variant/30 text-body-md text-on-surface placeholder:text-on-surface-variant/50 focus:outline-none focus:border-secondary focus:ring-1 focus:ring-secondary/30 transition"/>
+        </div>
+        <div>
+          <label class="block text-label-md text-label-md text-on-surface-variant mb-1.5">PASSWORD</label>
+          <input id="reg-password" type="password" placeholder="At least 6 characters" required class="w-full px-4 py-3 rounded-lg bg-surface-container-low border border-outline-variant/30 text-body-md text-on-surface placeholder:text-on-surface-variant/50 focus:outline-none focus:border-secondary focus:ring-1 focus:ring-secondary/30 transition"/>
+        </div>
+        <div>
+          <label class="block text-label-md text-label-md text-on-surface-variant mb-1.5">ACCOUNT ROLE</label>
+          <div class="relative">
+            <select id="reg-role" class="w-full px-4 py-3 rounded-lg bg-surface-container-low border border-outline-variant/30 text-body-md text-on-surface focus:outline-none focus:border-secondary focus:ring-1 focus:ring-secondary/30 transition appearance-none cursor-pointer">
+              <option value="staff">Staff (Standard)</option>
+              <option value="admin">Admin (Full Control)</option>
+            </select>
+            <span class="material-symbols-outlined absolute right-3 top-1/2 -translate-y-1/2 text-on-surface-variant/50 pointer-events-none text-[20px]">expand_more</span>
+          </div>
+        </div>
+        <button type="submit" class="w-full py-3 rounded-lg bg-primary text-on-primary font-semibold text-body-md hover:opacity-90 transition shadow-md mt-2">Create Account</button>
+      </form>
+      <p class="text-center text-body-md text-on-surface-variant mt-5">Already registered? <a href="#" onclick="toggleAuth('login')" class="text-secondary font-semibold hover:underline">Sign In</a></p>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════ MAIN APP ══════════════ -->
+<div id="app-layout" class="hidden">
+
+  <!-- Sidebar -->
+  <aside class="fixed left-0 top-0 h-full w-72 bg-surface-container-low z-50 flex flex-col shadow-[0_1px_8px_rgba(0,0,0,0.04)]">
+    <div class="h-16 flex items-center px-8 mb-6">
+      <div class="flex items-center gap-3">
+        <div class="w-8 h-8 rounded-lg bg-primary flex items-center justify-center">
+          <span class="material-symbols-outlined text-on-primary text-[20px]">inventory_2</span>
+        </div>
+        <span class="font-headline-md text-headline-md tracking-tight text-primary">Stock Master</span>
+      </div>
+    </div>
+
+    <nav class="flex-1 px-4 space-y-1" id="sidebar-nav">
+      <a data-view="dashboard" href="#dashboard" class="nav-link flex items-center gap-3 px-4 py-3 rounded-lg transition-all group bg-secondary-container text-on-secondary-container font-semibold">
+        <span class="material-symbols-outlined text-[22px]">dashboard</span><span class="text-body-md">Dashboard</span>
+      </a>
+      <a data-view="products" href="#products" class="nav-link flex items-center gap-3 px-4 py-3 rounded-lg text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-all group">
+        <span class="material-symbols-outlined text-[22px]">inventory</span><span class="text-body-md">Products</span>
+      </a>
+      <a data-view="categories" href="#categories" class="nav-link flex items-center gap-3 px-4 py-3 rounded-lg text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-all group">
+        <span class="material-symbols-outlined text-[22px]">category</span><span class="text-body-md">Categories</span>
+      </a>
+      <a data-view="suppliers" href="#suppliers" class="nav-link flex items-center gap-3 px-4 py-3 rounded-lg text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-all group">
+        <span class="material-symbols-outlined text-[22px]">local_shipping</span><span class="text-body-md">Suppliers</span>
+      </a>
+      <a data-view="stock" href="#stock" class="nav-link flex items-center gap-3 px-4 py-3 rounded-lg text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-all group">
+        <span class="material-symbols-outlined text-[22px]">swap_horiz</span><span class="text-body-md">Stock In/Out</span>
+      </a>
+      <a data-view="reports" href="#reports" class="nav-link flex items-center gap-3 px-4 py-3 rounded-lg text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-all group">
+        <span class="material-symbols-outlined text-[22px]">monitoring</span><span class="text-body-md">Analytics & PDF</span>
+      </a>
+      <a data-view="activity" href="#activity" class="nav-link flex items-center gap-3 px-4 py-3 rounded-lg text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-all group">
+        <span class="material-symbols-outlined text-[22px]">history</span><span class="text-body-md">Activity Log</span>
+      </a>
+    </nav>
+
+    <div class="px-4 py-6 border-t border-outline-variant/30">
+      <div class="flex items-center justify-between px-4 py-2">
+        <div class="flex items-center gap-3">
+          <div class="w-8 h-8 rounded-full bg-primary flex items-center justify-center">
+            <span id="sidebar-avatar" class="text-on-primary text-sm font-bold">A</span>
+          </div>
+          <div class="flex flex-col">
+            <span id="sidebar-username" class="text-body-md font-semibold text-on-surface">Admin</span>
+            <span id="sidebar-role" class="text-[11px] text-on-surface-variant uppercase tracking-wider font-bold">admin</span>
+          </div>
+        </div>
+        <button id="logout-btn" title="Sign Out" class="p-2 rounded-lg text-on-surface-variant hover:bg-error-container/30 hover:text-error transition-colors">
+          <span class="material-symbols-outlined text-[20px]">logout</span>
+        </button>
+      </div>
+    </div>
+  </aside>
+
+  <!-- Main wrapper -->
+  <div class="pl-72">
+    <!-- Top Header -->
+    <header class="fixed top-0 left-72 right-0 h-16 bg-surface/80 backdrop-blur-xl z-40 flex items-center justify-between px-6 shadow-[0_1px_8px_rgba(0,0,0,0.04)]">
+      <div class="flex items-center bg-surface-container-low px-4 py-2 rounded-full w-96 border border-outline-variant/20">
+        <span class="material-symbols-outlined text-on-surface-variant text-[20px] mr-2">search</span>
+        <input id="global-search" class="bg-transparent border-none outline-none text-body-md text-on-surface w-full" placeholder="Search inventory..." type="text"/>
+      </div>
+      <div class="flex items-center gap-6">
+        <button onclick="openStockModal(null,'IN')" class="bg-primary text-on-primary px-4 py-2 rounded-lg flex items-center gap-2 hover:opacity-90 transition shadow-sm">
+          <span class="material-symbols-outlined text-[18px]">add</span>
+          <span class="text-body-md font-semibold">Quick Stock IN</span>
+        </button>
+        <button class="relative text-on-surface-variant hover:text-primary transition-colors" id="notif-btn">
+          <span class="material-symbols-outlined">notifications</span>
+          <span id="notif-dot" class="absolute -top-1 -right-1 w-2 h-2 bg-error rounded-full hidden"></span>
+        </button>
+      </div>
+    </header>
+
+    <!-- Page Content -->
+    <main class="relative pt-16 bg-background min-h-screen">
+
+      <!-- ═══ DASHBOARD VIEW ═══ -->
+      <div id="view-dashboard" class="page-view hidden view-enter">
+        <div class="flex flex-col w-full p-8 max-w-[1440px] mx-auto gap-8">
+          <div class="flex items-center justify-between">
+            <div>
+              <h1 class="text-headline-lg font-headline-lg text-on-surface">Dashboard Overview</h1>
+              <p class="text-body-md text-on-surface-variant mt-1">Monitor critical stock levels and recent inventory movements.</p>
+            </div>
+          </div>
+
+          <!-- KPI Cards -->
+          <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            <div class="bg-surface-container-lowest rounded-xl p-6 border border-outline-variant/30 flex flex-col gap-2 hover:shadow-md transition-shadow">
+              <div class="flex items-center justify-between">
+                <span class="text-[11px] text-on-surface-variant uppercase tracking-wider font-semibold">Total Value</span>
+                <span class="material-symbols-outlined text-on-surface-variant/50">account_balance_wallet</span>
+              </div>
+              <div id="kpi-valuation" class="text-display-lg font-display-lg text-on-surface mt-2">₹0</div>
+              <div class="flex items-center gap-1 text-sm mt-1">
+                <span class="material-symbols-outlined text-secondary text-[16px]">trending_up</span>
+                <span class="text-secondary font-medium">Live Inventory Value</span>
+              </div>
+            </div>
+            <div class="bg-surface-container-lowest rounded-xl p-6 border border-outline-variant/30 flex flex-col gap-2 hover:shadow-md transition-shadow">
+              <div class="flex items-center justify-between">
+                <span class="text-[11px] text-on-surface-variant uppercase tracking-wider font-semibold">Low Stock Items</span>
+                <span class="material-symbols-outlined text-error/70">warning</span>
+              </div>
+              <div id="kpi-low-stock" class="text-display-lg font-display-lg text-on-surface mt-2">0</div>
+              <div class="flex items-center gap-1 text-sm mt-1">
+                <span class="text-error font-medium">Requires attention</span>
+              </div>
+            </div>
+            <div class="bg-surface-container-lowest rounded-xl p-6 border border-outline-variant/30 flex flex-col gap-2 hover:shadow-md transition-shadow">
+              <div class="flex items-center justify-between">
+                <span class="text-[11px] text-on-surface-variant uppercase tracking-wider font-semibold">Active SKUs</span>
+                <span class="material-symbols-outlined text-on-surface-variant/50">category</span>
+              </div>
+              <div id="kpi-total-products" class="text-display-lg font-display-lg text-on-surface mt-2">0</div>
+              <div class="flex items-center gap-1 text-sm mt-1">
+                <span id="kpi-categories-info" class="text-on-surface-variant">Across categories</span>
+              </div>
+            </div>
+            <div class="bg-surface-container-lowest rounded-xl p-6 border border-outline-variant/30 flex flex-col gap-2 hover:shadow-md transition-shadow">
+              <div class="flex items-center justify-between">
+                <span class="text-[11px] text-on-surface-variant uppercase tracking-wider font-semibold">Out of Stock</span>
+                <span class="material-symbols-outlined text-on-surface-variant/50">remove_shopping_cart</span>
+              </div>
+              <div id="kpi-out-of-stock" class="text-display-lg font-display-lg text-on-surface mt-2">0</div>
+              <div class="flex items-center gap-1 text-sm mt-1">
+                <span class="text-on-surface-variant">Needs immediate restock</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Charts Row -->
+          <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <div class="lg:col-span-2 bg-surface-container-lowest rounded-xl border border-outline-variant/30 p-6">
+              <h3 class="text-headline-md font-headline-md text-on-surface mb-4">Stock Movement Trends (IN vs OUT)</h3>
+              <div class="h-64 relative">
+                <canvas id="chart-stock-trend"></canvas>
+              </div>
+            </div>
+            <div class="bg-surface-container-lowest rounded-xl border border-outline-variant/30 p-6">
+              <h3 class="text-headline-md font-headline-md text-on-surface mb-4">Category Distribution</h3>
+              <div class="h-64 relative">
+                <canvas id="chart-category-distribution"></canvas>
+              </div>
+            </div>
+          </div>
+
+          <!-- Low Stock Alert Table -->
+          <section class="flex flex-col gap-0">
+            <div class="flex items-center justify-between bg-error-container/30 rounded-t-xl px-6 py-4 border-b border-error-container border border-outline-variant/30">
+              <div class="flex items-center gap-2">
+                <span class="material-symbols-outlined text-error">warning</span>
+                <h2 class="text-headline-md font-headline-md text-on-surface">Low Stock Priority Action Items</h2>
+              </div>
+              <button onclick="App.downloadPDF('low_stock')" class="text-on-surface-variant hover:text-on-surface flex items-center gap-2 px-3 py-1.5 rounded-lg border border-outline-variant/30 bg-surface-container-lowest text-sm transition-colors">
+                <span class="material-symbols-outlined text-[16px]">download</span>Export PDF
+              </button>
+            </div>
+            <div class="bg-surface-container-lowest rounded-b-xl border border-t-0 border-outline-variant/30 overflow-hidden">
+              <table class="w-full text-left border-collapse">
+                <thead>
+                  <tr class="bg-surface-container-low text-on-surface-variant text-xs uppercase tracking-wider font-semibold">
+                    <th class="px-6 py-4 border-b border-outline-variant/20">SKU</th>
+                    <th class="px-6 py-4 border-b border-outline-variant/20">Product Name</th>
+                    <th class="px-6 py-4 border-b border-outline-variant/20">Current Qty</th>
+                    <th class="px-6 py-4 border-b border-outline-variant/20">Threshold</th>
+                    <th class="px-6 py-4 border-b border-outline-variant/20 text-right">Action</th>
+                  </tr>
+                </thead>
+                <tbody id="dash-lowstock-tbody" class="text-body-md text-on-surface">
+                  <tr><td colspan="5" class="px-6 py-8 text-center text-on-surface-variant">Loading...</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </section>
+
+          <!-- Recent Activity Table -->
+          <section class="flex flex-col gap-4">
+            <div class="flex items-center justify-between px-2">
+              <h2 class="text-headline-md font-headline-md text-on-surface">Recent Stock Activity Log</h2>
+              <a href="#stock" onclick="navigate('stock')" class="text-secondary text-sm font-medium hover:underline">View all activity</a>
+            </div>
+            <div class="bg-surface-container-lowest rounded-xl border border-outline-variant/30 overflow-hidden shadow-sm">
+              <table class="w-full text-left border-collapse">
+                <thead>
+                  <tr class="bg-surface-container-low text-on-surface-variant text-xs uppercase tracking-wider font-semibold">
+                    <th class="px-6 py-4 border-b border-outline-variant/20">Timestamp</th>
+                    <th class="px-6 py-4 border-b border-outline-variant/20">Product Name</th>
+                    <th class="px-6 py-4 border-b border-outline-variant/20">Movement</th>
+                    <th class="px-6 py-4 border-b border-outline-variant/20">Reason / Note</th>
+                    <th class="px-6 py-4 border-b border-outline-variant/20">Logged By</th>
+                  </tr>
+                </thead>
+                <tbody id="dash-activity-tbody" class="text-body-md text-on-surface">
+                  <tr><td colspan="5" class="px-6 py-8 text-center text-on-surface-variant">Loading...</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </section>
+        </div>
+      </div>
+
+      <!-- ═══ PRODUCTS VIEW ═══ -->
+      <div id="view-products" class="page-view hidden view-enter">
+        <div class="flex flex-col w-full p-8 max-w-[1440px] mx-auto gap-8">
+          <div class="flex flex-col md:flex-row md:items-end justify-between gap-6">
+            <div>
+              <h1 class="text-display-lg font-display-lg text-on-surface tracking-tight">Master Product Inventory</h1>
+              <p class="text-body-lg text-on-surface-variant mt-1">Manage your product catalog, track stock levels, and trigger reorders.</p>
+            </div>
+            <div class="flex items-center gap-3 shrink-0">
+              <button onclick="App.downloadPDF('products')" class="flex items-center gap-2 px-4 py-2 rounded-lg bg-surface-container-low text-on-surface font-semibold text-sm hover:bg-surface-container-high transition border border-outline-variant/30 shadow-sm">
+                <span class="material-symbols-outlined text-[18px]">download</span>EXPORT PDF
+              </button>
+              <button onclick="Products.openModal()" class="flex items-center gap-2 px-5 py-2.5 rounded-lg bg-primary text-on-primary font-semibold text-sm hover:opacity-90 transition shadow-md">
+                <span class="material-symbols-outlined text-[18px]">add</span>ADD PRODUCT
+              </button>
+            </div>
+          </div>
+
+          <div class="flex flex-col bg-surface-container-lowest rounded-xl border border-outline-variant/40 overflow-hidden shadow-sm">
+            <!-- Filter Bar -->
+            <div class="flex flex-col sm:flex-row items-center justify-between p-5 gap-4 border-b border-outline-variant/20 bg-surface/30">
+              <div class="relative w-full sm:w-80">
+                <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant/60 text-[20px]">search</span>
+                <input id="prod-search" oninput="Products.fetch()" type="text" placeholder="Search by SKU, Name, or Supplier..." class="w-full pl-10 pr-4 py-2.5 rounded-lg bg-surface-container-low border border-outline-variant/30 text-body-md text-on-surface placeholder:text-on-surface-variant/50 focus:outline-none focus:border-secondary focus:ring-1 focus:ring-secondary/30 transition"/>
+              </div>
+              <div class="flex items-center gap-3 w-full sm:w-auto">
+                <div class="relative flex-1 sm:flex-none">
+                  <select id="prod-filter-cat" onchange="Products.fetch()" class="appearance-none w-full sm:w-40 px-4 py-2.5 rounded-lg bg-surface-container-low border border-outline-variant/30 text-body-md text-on-surface-variant focus:outline-none cursor-pointer transition">
+                    <option value="">All Categories</option>
+                  </select>
+                  <span class="material-symbols-outlined absolute right-3 top-1/2 -translate-y-1/2 text-on-surface-variant/60 pointer-events-none text-[20px]">expand_more</span>
+                </div>
+                <div class="relative flex-1 sm:flex-none">
+                  <select id="prod-filter-status" onchange="Products.fetch()" class="appearance-none w-full sm:w-40 px-4 py-2.5 rounded-lg bg-surface-container-low border border-outline-variant/30 text-body-md text-on-surface-variant focus:outline-none cursor-pointer transition">
+                    <option value="">All Statuses</option>
+                    <option value="normal">In Stock</option>
+                    <option value="low">Low Stock</option>
+                    <option value="out_of_stock">Out of Stock</option>
+                  </select>
+                  <span class="material-symbols-outlined absolute right-3 top-1/2 -translate-y-1/2 text-on-surface-variant/60 pointer-events-none text-[20px]">expand_more</span>
+                </div>
+              </div>
+            </div>
+            <!-- Products Table -->
+            <div class="overflow-x-auto">
+              <table class="w-full text-left border-collapse min-w-[900px]">
+                <thead>
+                  <tr class="bg-surface-container-low/50 border-b border-outline-variant/20">
+                    <th class="px-6 py-4 text-label-md text-on-surface-variant/70 uppercase tracking-wider w-32">SKU</th>
+                    <th class="px-6 py-4 text-label-md text-on-surface-variant/70 uppercase tracking-wider">Product Name</th>
+                    <th class="px-6 py-4 text-label-md text-on-surface-variant/70 uppercase tracking-wider">Category</th>
+                    <th class="px-6 py-4 text-label-md text-on-surface-variant/70 uppercase tracking-wider">Supplier</th>
+                    <th class="px-6 py-4 text-label-md text-on-surface-variant/70 uppercase tracking-wider text-right">Price</th>
+                    <th class="px-6 py-4 text-label-md text-on-surface-variant/70 uppercase tracking-wider text-right">Stock</th>
+                    <th class="px-6 py-4 text-label-md text-on-surface-variant/70 uppercase tracking-wider text-center">Status</th>
+                    <th class="px-6 py-4 text-label-md text-on-surface-variant/70 uppercase tracking-wider text-right w-28">Actions</th>
+                  </tr>
+                </thead>
+                <tbody id="products-tbody" class="divide-y divide-outline-variant/10 text-body-md text-on-surface">
+                  <tr><td colspan="8" class="px-6 py-8 text-center text-on-surface-variant">Loading products...</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ═══ CATEGORIES VIEW ═══ -->
+      <div id="view-categories" class="page-view hidden view-enter">
+        <div class="flex flex-col w-full p-8 max-w-[1440px] mx-auto gap-8">
+          <div class="flex items-center justify-between">
+            <div>
+              <h1 class="text-headline-lg font-headline-lg text-on-surface">Product Categories</h1>
+              <p class="text-body-md text-on-surface-variant mt-1">Manage your product classification groups.</p>
+            </div>
+            <button onclick="Categories.openModal()" class="admin-only flex items-center gap-2 px-5 py-2.5 rounded-lg bg-primary text-on-primary font-semibold text-sm hover:opacity-90 transition shadow-md">
+              <span class="material-symbols-outlined text-[18px]">add</span>ADD CATEGORY
+            </button>
+          </div>
+          <div class="bg-surface-container-lowest rounded-xl border border-outline-variant/30 overflow-hidden shadow-sm">
+            <table class="w-full text-left border-collapse">
+              <thead>
+                <tr class="bg-surface-container-low text-on-surface-variant text-xs uppercase tracking-wider font-semibold">
+                  <th class="px-6 py-4 border-b border-outline-variant/20">Category Name</th>
+                  <th class="px-6 py-4 border-b border-outline-variant/20">Description</th>
+                  <th class="px-6 py-4 border-b border-outline-variant/20">Products</th>
+                  <th class="px-6 py-4 border-b border-outline-variant/20 text-right">Actions</th>
+                </tr>
+              </thead>
+              <tbody id="categories-tbody" class="text-body-md text-on-surface divide-y divide-outline-variant/10">
+                <tr><td colspan="4" class="px-6 py-8 text-center text-on-surface-variant">Loading...</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- ═══ SUPPLIERS VIEW ═══ -->
+      <div id="view-suppliers" class="page-view hidden view-enter">
+        <div class="flex flex-col w-full p-8 max-w-[1440px] mx-auto gap-8">
+          <div class="flex items-center justify-between">
+            <div>
+              <h1 class="text-headline-lg font-headline-lg text-on-surface">Suppliers Directory</h1>
+              <p class="text-body-md text-on-surface-variant mt-1">Manage vendor relationships and contact information.</p>
+            </div>
+            <button onclick="Suppliers.openModal()" class="admin-only flex items-center gap-2 px-5 py-2.5 rounded-lg bg-primary text-on-primary font-semibold text-sm hover:opacity-90 transition shadow-md">
+              <span class="material-symbols-outlined text-[18px]">add</span>ADD SUPPLIER
+            </button>
+          </div>
+          <div class="bg-surface-container-lowest rounded-xl border border-outline-variant/30 overflow-hidden shadow-sm">
+            <table class="w-full text-left border-collapse min-w-[700px] overflow-x-auto">
+              <thead>
+                <tr class="bg-surface-container-low text-on-surface-variant text-xs uppercase tracking-wider font-semibold">
+                  <th class="px-6 py-4 border-b border-outline-variant/20">Supplier Name</th>
+                  <th class="px-6 py-4 border-b border-outline-variant/20">Contact Person</th>
+                  <th class="px-6 py-4 border-b border-outline-variant/20">Email</th>
+                  <th class="px-6 py-4 border-b border-outline-variant/20">Phone</th>
+                  <th class="px-6 py-4 border-b border-outline-variant/20">Products</th>
+                  <th class="px-6 py-4 border-b border-outline-variant/20 text-right">Actions</th>
+                </tr>
+              </thead>
+              <tbody id="suppliers-tbody" class="text-body-md text-on-surface divide-y divide-outline-variant/10">
+                <tr><td colspan="6" class="px-6 py-8 text-center text-on-surface-variant">Loading...</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- ═══ STOCK IN/OUT VIEW ═══ -->
+      <div id="view-stock" class="page-view hidden view-enter">
+        <div class="flex flex-col w-full p-8 max-w-[1440px] mx-auto gap-8">
+          <div class="flex items-center justify-between">
+            <div>
+              <h1 class="text-headline-lg font-headline-lg text-on-surface">Stock In / Out Movements</h1>
+              <p class="text-body-md text-on-surface-variant mt-1">Record and audit all inventory changes.</p>
+            </div>
+            <div class="flex items-center gap-3">
+              <button onclick="App.downloadPDF('stock')" class="flex items-center gap-2 px-4 py-2 rounded-lg bg-surface-container-low text-on-surface font-semibold text-sm hover:bg-surface-container-high transition border border-outline-variant/30 shadow-sm">
+                <span class="material-symbols-outlined text-[18px]">download</span>EXPORT PDF
+              </button>
+              <button onclick="openStockModal(null,'IN')" class="flex items-center gap-2 px-5 py-2.5 rounded-lg bg-primary text-on-primary font-semibold text-sm hover:opacity-90 transition shadow-md">
+                <span class="material-symbols-outlined text-[18px]">add</span>RECORD MOVEMENT
+              </button>
+            </div>
+          </div>
+          <div class="bg-surface-container-lowest rounded-xl border border-outline-variant/30 overflow-hidden shadow-sm">
+            <div class="flex items-center gap-4 p-5 border-b border-outline-variant/20 bg-surface/30">
+              <div class="relative">
+                <select id="stock-type-filter" onchange="Stock.loadHistory()" class="appearance-none px-4 py-2.5 pr-10 rounded-lg bg-surface-container-low border border-outline-variant/30 text-body-md text-on-surface-variant focus:outline-none cursor-pointer">
+                  <option value="">All Movement Types</option>
+                  <option value="IN">Stock IN Only</option>
+                  <option value="OUT">Stock OUT Only</option>
+                </select>
+                <span class="material-symbols-outlined absolute right-3 top-1/2 -translate-y-1/2 text-on-surface-variant/60 pointer-events-none text-[20px]">expand_more</span>
+              </div>
+            </div>
+            <div class="overflow-x-auto">
+              <table class="w-full text-left border-collapse min-w-[800px]">
+                <thead>
+                  <tr class="bg-surface-container-low text-on-surface-variant text-xs uppercase tracking-wider font-semibold">
+                    <th class="px-6 py-4 border-b border-outline-variant/20">Timestamp</th>
+                    <th class="px-6 py-4 border-b border-outline-variant/20">SKU</th>
+                    <th class="px-6 py-4 border-b border-outline-variant/20">Product Name</th>
+                    <th class="px-6 py-4 border-b border-outline-variant/20">Type</th>
+                    <th class="px-6 py-4 border-b border-outline-variant/20">Quantity</th>
+                    <th class="px-6 py-4 border-b border-outline-variant/20">Reason</th>
+                    <th class="px-6 py-4 border-b border-outline-variant/20">Logged By</th>
+                  </tr>
+                </thead>
+                <tbody id="stock-tbody" class="text-body-md text-on-surface divide-y divide-outline-variant/10">
+                  <tr><td colspan="7" class="px-6 py-8 text-center text-on-surface-variant">Loading...</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ═══ REPORTS VIEW ═══ -->
+      <div id="view-reports" class="page-view hidden view-enter">
+        <div class="flex flex-col w-full p-8 max-w-[1440px] mx-auto gap-8">
+          <div>
+            <h1 class="text-headline-lg font-headline-lg text-on-surface">Analytics & PDF Reports</h1>
+            <p class="text-body-md text-on-surface-variant mt-1">Inventory insights and downloadable reports.</p>
+          </div>
+          <!-- KPI Summary Cards -->
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div class="bg-surface-container-lowest rounded-xl p-6 border border-outline-variant/30">
+              <span class="text-[11px] text-on-surface-variant uppercase tracking-wider font-semibold">Active SKUs</span>
+              <div id="rep-total-prods" class="text-display-lg font-display-lg text-on-surface mt-2">0</div>
+            </div>
+            <div class="bg-surface-container-lowest rounded-xl p-6 border border-outline-variant/30">
+              <span class="text-[11px] text-on-surface-variant uppercase tracking-wider font-semibold">Total Asset Value</span>
+              <div id="rep-total-val" class="text-display-lg font-display-lg text-on-surface mt-2">₹0</div>
+            </div>
+            <div class="bg-surface-container-lowest rounded-xl p-6 border border-outline-variant/30">
+              <span class="text-[11px] text-on-surface-variant uppercase tracking-wider font-semibold">Reorder Flagged</span>
+              <div id="rep-low-count" class="text-display-lg font-display-lg text-on-surface mt-2">0</div>
+            </div>
+          </div>
+          <!-- PDF Export Buttons -->
+          <div class="flex gap-4 flex-wrap">
+            <button onclick="App.downloadPDF('products')" class="flex items-center gap-2 px-5 py-3 rounded-lg bg-primary text-on-primary font-semibold text-sm hover:opacity-90 transition shadow-md">
+              <span class="material-symbols-outlined text-[18px]">picture_as_pdf</span>Download Product Inventory PDF
+            </button>
+            <button onclick="App.downloadPDF('low_stock')" class="flex items-center gap-2 px-5 py-3 rounded-lg bg-surface-container-low text-on-surface font-semibold text-sm hover:bg-surface-container-high transition border border-outline-variant/30 shadow-sm">
+              <span class="material-symbols-outlined text-[18px]">picture_as_pdf</span>Download Low Stock Alerts PDF
+            </button>
+            <button onclick="App.downloadPDF('stock')" class="flex items-center gap-2 px-5 py-3 rounded-lg bg-surface-container-low text-on-surface font-semibold text-sm hover:bg-surface-container-high transition border border-outline-variant/30 shadow-sm">
+              <span class="material-symbols-outlined text-[18px]">picture_as_pdf</span>Download Stock History PDF
+            </button>
+          </div>
+          <!-- Most Active Products Table -->
+          <div class="bg-surface-container-lowest rounded-xl border border-outline-variant/30 overflow-hidden shadow-sm">
+            <div class="px-6 py-5 border-b border-outline-variant/20 bg-surface/30">
+              <h3 class="text-headline-md font-headline-md text-on-surface">Most Active Products (Top Volume Moved)</h3>
+            </div>
+            <table class="w-full text-left border-collapse">
+              <thead>
+                <tr class="bg-surface-container-low text-on-surface-variant text-xs uppercase tracking-wider font-semibold">
+                  <th class="px-6 py-4 border-b border-outline-variant/20">Rank</th>
+                  <th class="px-6 py-4 border-b border-outline-variant/20">SKU</th>
+                  <th class="px-6 py-4 border-b border-outline-variant/20">Product Name</th>
+                  <th class="px-6 py-4 border-b border-outline-variant/20">Total Volume Moved</th>
+                </tr>
+              </thead>
+              <tbody id="rep-active-tbody" class="text-body-md text-on-surface divide-y divide-outline-variant/10">
+                <tr><td colspan="4" class="px-6 py-8 text-center text-on-surface-variant">Loading...</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- ═══ ACTIVITY LOG VIEW ═══ -->
+      <div id="view-activity" class="page-view hidden view-enter">
+        <div class="flex flex-col w-full p-8 max-w-[1440px] mx-auto gap-8">
+          <div>
+            <h1 class="text-headline-lg font-headline-lg text-on-surface">System Audit Log</h1>
+            <p class="text-body-md text-on-surface-variant mt-1">Complete trail of all user actions and system events.</p>
+          </div>
+          <div class="bg-surface-container-lowest rounded-xl border border-outline-variant/30 p-6 shadow-sm">
+            <div id="activity-timeline" class="space-y-4">
+              <p class="text-center text-on-surface-variant py-8">Loading activity log...</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </main>
+  </div>
+</div>
+
+<!-- ══════════════ MODALS ══════════════ -->
+
+<!-- Product Modal -->
+<div id="modal-product" class="fixed inset-0 z-[200] hidden modal-backdrop bg-black/40 flex items-center justify-center p-4">
+  <div class="bg-surface-container-lowest rounded-2xl border border-outline-variant/30 w-full max-w-xl shadow-2xl">
+    <div class="flex items-center justify-between px-6 py-5 border-b border-outline-variant/20">
+      <h3 id="modal-product-title" class="text-headline-md font-headline-md text-on-surface">Add Product</h3>
+      <button onclick="Products.closeModal()" class="p-1.5 rounded-lg text-on-surface-variant hover:bg-surface-container-high transition"><span class="material-symbols-outlined text-[22px]">close</span></button>
+    </div>
+    <form id="form-product" onsubmit="Products.save(event)" class="px-6 py-5 space-y-4 max-h-[75vh] overflow-y-auto">
+      <input type="hidden" id="prod-id"/>
+      <div class="grid grid-cols-2 gap-4">
+        <div>
+          <label class="block text-label-md text-on-surface-variant mb-1.5">SKU CODE *</label>
+          <input id="prod-sku" type="text" placeholder="e.g. ELEC-KB-01" required class="w-full px-3 py-2.5 rounded-lg bg-surface-container-low border border-outline-variant/30 text-body-md text-on-surface focus:outline-none focus:border-secondary focus:ring-1 focus:ring-secondary/30 transition"/>
+        </div>
+        <div>
+          <label class="block text-label-md text-on-surface-variant mb-1.5">UNIT</label>
+          <input id="prod-unit" type="text" value="pcs" class="w-full px-3 py-2.5 rounded-lg bg-surface-container-low border border-outline-variant/30 text-body-md text-on-surface focus:outline-none focus:border-secondary focus:ring-1 focus:ring-secondary/30 transition"/>
+        </div>
+      </div>
+      <div>
+        <label class="block text-label-md text-on-surface-variant mb-1.5">PRODUCT NAME *</label>
+        <input id="prod-name" type="text" placeholder="e.g. Mechanical Gaming Keyboard" required class="w-full px-3 py-2.5 rounded-lg bg-surface-container-low border border-outline-variant/30 text-body-md text-on-surface focus:outline-none focus:border-secondary focus:ring-1 focus:ring-secondary/30 transition"/>
+      </div>
+      <div class="grid grid-cols-2 gap-4">
+        <div>
+          <label class="block text-label-md text-on-surface-variant mb-1.5">CATEGORY</label>
+          <div class="relative">
+            <select id="prod-category" class="appearance-none w-full px-3 py-2.5 rounded-lg bg-surface-container-low border border-outline-variant/30 text-body-md text-on-surface focus:outline-none focus:border-secondary cursor-pointer transition">
+              <option value="">No Category</option>
+            </select>
+            <span class="material-symbols-outlined absolute right-3 top-1/2 -translate-y-1/2 text-on-surface-variant/60 pointer-events-none text-[18px]">expand_more</span>
+          </div>
+        </div>
+        <div>
+          <label class="block text-label-md text-on-surface-variant mb-1.5">SUPPLIER</label>
+          <div class="relative">
+            <select id="prod-supplier" class="appearance-none w-full px-3 py-2.5 rounded-lg bg-surface-container-low border border-outline-variant/30 text-body-md text-on-surface focus:outline-none focus:border-secondary cursor-pointer transition">
+              <option value="">No Supplier</option>
+            </select>
+            <span class="material-symbols-outlined absolute right-3 top-1/2 -translate-y-1/2 text-on-surface-variant/60 pointer-events-none text-[18px]">expand_more</span>
+          </div>
+        </div>
+      </div>
+      <div class="grid grid-cols-3 gap-4">
+        <div>
+          <label class="block text-label-md text-on-surface-variant mb-1.5">PRICE (₹)</label>
+          <input id="prod-price" type="number" step="0.01" value="0.00" class="w-full px-3 py-2.5 rounded-lg bg-surface-container-low border border-outline-variant/30 text-body-md text-on-surface focus:outline-none focus:border-secondary transition"/>
+        </div>
+        <div>
+          <label class="block text-label-md text-on-surface-variant mb-1.5">QUANTITY</label>
+          <input id="prod-quantity" type="number" value="0" class="w-full px-3 py-2.5 rounded-lg bg-surface-container-low border border-outline-variant/30 text-body-md text-on-surface focus:outline-none focus:border-secondary transition"/>
+        </div>
+        <div>
+          <label class="block text-label-md text-on-surface-variant mb-1.5">REORDER LVL</label>
+          <input id="prod-reorder" type="number" value="10" class="w-full px-3 py-2.5 rounded-lg bg-surface-container-low border border-outline-variant/30 text-body-md text-on-surface focus:outline-none focus:border-secondary transition"/>
+        </div>
+      </div>
+    </form>
+    <div class="flex items-center justify-end gap-3 px-6 py-4 border-t border-outline-variant/20 bg-surface/30 rounded-b-2xl">
+      <button onclick="Products.closeModal()" class="px-4 py-2 rounded-lg bg-surface-container-low text-on-surface font-semibold text-sm hover:bg-surface-container-high transition border border-outline-variant/30">Cancel</button>
+      <button onclick="document.getElementById('form-product').requestSubmit()" class="px-5 py-2 rounded-lg bg-primary text-on-primary font-semibold text-sm hover:opacity-90 transition shadow-md">Save Product</button>
+    </div>
+  </div>
+</div>
+
+<!-- Category Modal -->
+<div id="modal-category" class="fixed inset-0 z-[200] hidden modal-backdrop bg-black/40 flex items-center justify-center p-4">
+  <div class="bg-surface-container-lowest rounded-2xl border border-outline-variant/30 w-full max-w-md shadow-2xl">
+    <div class="flex items-center justify-between px-6 py-5 border-b border-outline-variant/20">
+      <h3 id="modal-category-title" class="text-headline-md font-headline-md text-on-surface">Add Category</h3>
+      <button onclick="Categories.closeModal()" class="p-1.5 rounded-lg text-on-surface-variant hover:bg-surface-container-high transition"><span class="material-symbols-outlined text-[22px]">close</span></button>
+    </div>
+    <form id="form-category" onsubmit="Categories.save(event)" class="px-6 py-5 space-y-4">
+      <input type="hidden" id="cat-id"/>
+      <div>
+        <label class="block text-label-md text-on-surface-variant mb-1.5">CATEGORY NAME *</label>
+        <input id="cat-name" type="text" placeholder="e.g. Hardware" required class="w-full px-3 py-2.5 rounded-lg bg-surface-container-low border border-outline-variant/30 text-body-md text-on-surface focus:outline-none focus:border-secondary focus:ring-1 focus:ring-secondary/30 transition"/>
+      </div>
+      <div>
+        <label class="block text-label-md text-on-surface-variant mb-1.5">DESCRIPTION</label>
+        <textarea id="cat-description" rows="3" placeholder="Category summary..." class="w-full px-3 py-2.5 rounded-lg bg-surface-container-low border border-outline-variant/30 text-body-md text-on-surface focus:outline-none focus:border-secondary focus:ring-1 focus:ring-secondary/30 transition resize-none"></textarea>
+      </div>
+    </form>
+    <div class="flex items-center justify-end gap-3 px-6 py-4 border-t border-outline-variant/20 rounded-b-2xl">
+      <button onclick="Categories.closeModal()" class="px-4 py-2 rounded-lg bg-surface-container-low text-on-surface font-semibold text-sm hover:bg-surface-container-high transition border border-outline-variant/30">Cancel</button>
+      <button onclick="document.getElementById('form-category').requestSubmit()" class="px-5 py-2 rounded-lg bg-primary text-on-primary font-semibold text-sm hover:opacity-90 transition shadow-md">Save Category</button>
+    </div>
+  </div>
+</div>
+
+<!-- Supplier Modal -->
+<div id="modal-supplier" class="fixed inset-0 z-[200] hidden modal-backdrop bg-black/40 flex items-center justify-center p-4">
+  <div class="bg-surface-container-lowest rounded-2xl border border-outline-variant/30 w-full max-w-lg shadow-2xl">
+    <div class="flex items-center justify-between px-6 py-5 border-b border-outline-variant/20">
+      <h3 id="modal-supplier-title" class="text-headline-md font-headline-md text-on-surface">Add Supplier</h3>
+      <button onclick="Suppliers.closeModal()" class="p-1.5 rounded-lg text-on-surface-variant hover:bg-surface-container-high transition"><span class="material-symbols-outlined text-[22px]">close</span></button>
+    </div>
+    <form id="form-supplier" onsubmit="Suppliers.save(event)" class="px-6 py-5 space-y-4">
+      <input type="hidden" id="sup-id"/>
+      <div>
+        <label class="block text-label-md text-on-surface-variant mb-1.5">SUPPLIER NAME *</label>
+        <input id="sup-name" type="text" placeholder="e.g. Global Tech Distributors" required class="w-full px-3 py-2.5 rounded-lg bg-surface-container-low border border-outline-variant/30 text-body-md text-on-surface focus:outline-none focus:border-secondary transition"/>
+      </div>
+      <div class="grid grid-cols-2 gap-4">
+        <div>
+          <label class="block text-label-md text-on-surface-variant mb-1.5">CONTACT PERSON</label>
+          <input id="sup-contact" type="text" placeholder="e.g. John Doe" class="w-full px-3 py-2.5 rounded-lg bg-surface-container-low border border-outline-variant/30 text-body-md text-on-surface focus:outline-none focus:border-secondary transition"/>
+        </div>
+        <div>
+          <label class="block text-label-md text-on-surface-variant mb-1.5">PHONE</label>
+          <input id="sup-phone" type="text" placeholder="+1 555-0199" class="w-full px-3 py-2.5 rounded-lg bg-surface-container-low border border-outline-variant/30 text-body-md text-on-surface focus:outline-none focus:border-secondary transition"/>
+        </div>
+      </div>
+      <div>
+        <label class="block text-label-md text-on-surface-variant mb-1.5">EMAIL ADDRESS</label>
+        <input id="sup-email" type="email" placeholder="sales@vendor.com" class="w-full px-3 py-2.5 rounded-lg bg-surface-container-low border border-outline-variant/30 text-body-md text-on-surface focus:outline-none focus:border-secondary transition"/>
+      </div>
+      <div>
+        <label class="block text-label-md text-on-surface-variant mb-1.5">ADDRESS</label>
+        <textarea id="sup-address" rows="2" placeholder="Suite, Street, City..." class="w-full px-3 py-2.5 rounded-lg bg-surface-container-low border border-outline-variant/30 text-body-md text-on-surface focus:outline-none focus:border-secondary transition resize-none"></textarea>
+      </div>
+    </form>
+    <div class="flex items-center justify-end gap-3 px-6 py-4 border-t border-outline-variant/20 rounded-b-2xl">
+      <button onclick="Suppliers.closeModal()" class="px-4 py-2 rounded-lg bg-surface-container-low text-on-surface font-semibold text-sm hover:bg-surface-container-high transition border border-outline-variant/30">Cancel</button>
+      <button onclick="document.getElementById('form-supplier').requestSubmit()" class="px-5 py-2 rounded-lg bg-primary text-on-primary font-semibold text-sm hover:opacity-90 transition shadow-md">Save Supplier</button>
+    </div>
+  </div>
+</div>
+
+<!-- Stock Movement Modal -->
+<div id="modal-stock" class="fixed inset-0 z-[200] hidden modal-backdrop bg-black/40 flex items-center justify-center p-4">
+  <div class="bg-surface-container-lowest rounded-2xl border border-outline-variant/30 w-full max-w-md shadow-2xl">
+    <div class="flex items-center justify-between px-6 py-5 border-b border-outline-variant/20">
+      <h3 class="text-headline-md font-headline-md text-on-surface">Record Stock Movement</h3>
+      <button onclick="closeStockModal()" class="p-1.5 rounded-lg text-on-surface-variant hover:bg-surface-container-high transition"><span class="material-symbols-outlined text-[22px]">close</span></button>
+    </div>
+    <form id="form-stock" onsubmit="Stock.save(event)" class="px-6 py-5 space-y-4">
+      <div>
+        <label class="block text-label-md text-on-surface-variant mb-1.5">SELECT PRODUCT *</label>
+        <div class="relative">
+          <select id="stock-product" required class="appearance-none w-full px-3 py-2.5 rounded-lg bg-surface-container-low border border-outline-variant/30 text-body-md text-on-surface focus:outline-none focus:border-secondary cursor-pointer transition">
+            <option value="">-- Select Product --</option>
+          </select>
+          <span class="material-symbols-outlined absolute right-3 top-1/2 -translate-y-1/2 text-on-surface-variant/60 pointer-events-none text-[18px]">expand_more</span>
+        </div>
+      </div>
+      <div class="grid grid-cols-2 gap-4">
+        <div>
+          <label class="block text-label-md text-on-surface-variant mb-1.5">MOVEMENT TYPE *</label>
+          <div class="relative">
+            <select id="stock-type" required class="appearance-none w-full px-3 py-2.5 rounded-lg bg-surface-container-low border border-outline-variant/30 text-body-md text-on-surface focus:outline-none focus:border-secondary cursor-pointer transition">
+              <option value="IN">Stock IN (+ Add)</option>
+              <option value="OUT">Stock OUT (- Deduct)</option>
+            </select>
+            <span class="material-symbols-outlined absolute right-3 top-1/2 -translate-y-1/2 text-on-surface-variant/60 pointer-events-none text-[18px]">expand_more</span>
+          </div>
+        </div>
+        <div>
+          <label class="block text-label-md text-on-surface-variant mb-1.5">QUANTITY *</label>
+          <input id="stock-qty" type="number" min="1" value="1" required class="w-full px-3 py-2.5 rounded-lg bg-surface-container-low border border-outline-variant/30 text-body-md text-on-surface focus:outline-none focus:border-secondary transition"/>
+        </div>
+      </div>
+      <div>
+        <label class="block text-label-md text-on-surface-variant mb-1.5">REASON / REFERENCE</label>
+        <input id="stock-reason" type="text" placeholder="e.g. Shipment receipt #401, Customer order #992" class="w-full px-3 py-2.5 rounded-lg bg-surface-container-low border border-outline-variant/30 text-body-md text-on-surface focus:outline-none focus:border-secondary transition"/>
+      </div>
+    </form>
+    <div class="flex items-center justify-end gap-3 px-6 py-4 border-t border-outline-variant/20 rounded-b-2xl">
+      <button onclick="closeStockModal()" class="px-4 py-2 rounded-lg bg-surface-container-low text-on-surface font-semibold text-sm hover:bg-surface-container-high transition border border-outline-variant/30">Cancel</button>
+      <button onclick="document.getElementById('form-stock').requestSubmit()" class="px-5 py-2 rounded-lg bg-primary text-on-primary font-semibold text-sm hover:opacity-90 transition shadow-md">Confirm & Update Stock</button>
+    </div>
+  </div>
+</div>
+
+<!-- Toast Container -->
+<div id="toast-container" class="fixed bottom-6 right-6 z-[9999] space-y-3 max-w-sm w-full pointer-events-none"></div>
+
+<!-- ══════════════ SCRIPTS ══════════════ -->
+<script>
+const API_BASE = '/api';
+let _token = localStorage.getItem('inv_token');
+let _user = JSON.parse(localStorage.getItem('inv_user') || 'null');
+let trendChart = null, catChart = null;
+
+// ─── API Helper ───
+const api = {
+  headers() {
+    const h = { 'Content-Type': 'application/json' };
+    if (_token) h['Authorization'] = `Bearer ${_token}`;
+    return h;
+  },
+  async req(method, endpoint, body) {
+    const res = await fetch(`${API_BASE}${endpoint}`, {
+      method, headers: this.headers(),
+      body: body ? JSON.stringify(body) : undefined
+    });
+    const data = await res.json();
+    if (!res.ok) {
+      if (res.status === 401) { logout(); }
+      throw new Error(data.error || 'Request failed');
+    }
+    return data;
+  },
+  get: (ep) => api.req('GET', ep),
+  post: (ep, b) => api.req('POST', ep, b),
+  put: (ep, b) => api.req('PUT', ep, b),
+  del: (ep) => api.req('DELETE', ep),
+  async blob(endpoint, filename) {
+    try {
+      const res = await fetch(`${API_BASE}${endpoint}`, { headers: api.headers() });
+      if (!res.ok) throw new Error('PDF generation failed');
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url; a.download = filename;
+      document.body.appendChild(a); a.click(); a.remove();
+      URL.revokeObjectURL(url);
+      toast(`Downloaded ${filename}`, 'success');
+    } catch(e) { toast(e.message, 'danger'); }
+  }
+};
+
+// ─── Toast Notifications ───
+function toast(msg, type = 'info') {
+  const c = document.getElementById('toast-container');
+  const t = document.createElement('div');
+  const colors = { success: 'border-l-secondary bg-secondary-container/30 text-on-secondary-container', danger: 'border-l-error bg-error-container/30 text-on-error-container', warning: 'border-l-yellow-500 bg-yellow-50 text-yellow-800', info: 'border-l-secondary bg-secondary-container/20 text-on-surface' };
+  const icons = { success: 'check_circle', danger: 'error', warning: 'warning', info: 'info' };
+  t.className = `toast-enter pointer-events-auto flex items-center gap-3 px-4 py-3.5 rounded-xl border-l-4 shadow-lg bg-surface-container-lowest border border-outline-variant/20 ${colors[type]||colors.info}`;
+  t.innerHTML = `<span class="material-symbols-outlined text-[20px]">${icons[type]||'info'}</span><span class="text-sm font-medium flex-1">${msg}</span><button onclick="this.parentElement.remove()" class="opacity-50 hover:opacity-100 transition"><span class="material-symbols-outlined text-[18px]">close</span></button>`;
+  c.appendChild(t);
+  setTimeout(() => { t.style.opacity='0'; t.style.transform='translateX(60px)'; t.style.transition='all 0.3s'; setTimeout(()=>t.remove(),300); }, 4500);
+}
+
+// ─── Auth ───
+function toggleAuth(mode) {
+  document.getElementById('login-card').classList.toggle('hidden', mode !== 'login');
+  document.getElementById('register-card').classList.toggle('hidden', mode !== 'register');
+}
+
+function logout() {
+  _token = null; _user = null;
+  localStorage.removeItem('inv_token'); localStorage.removeItem('inv_user');
+  document.getElementById('auth-screen').classList.remove('hidden');
+  document.getElementById('app-layout').classList.add('hidden');
+  toast('Signed out successfully.', 'info');
+}
+
+document.getElementById('login-form').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  try {
+    const res = await api.post('/auth/login', { username: document.getElementById('login-username').value.trim(), password: document.getElementById('login-password').value });
+    _token = res.token; _user = res.user;
+    localStorage.setItem('inv_token', _token);
+    localStorage.setItem('inv_user', JSON.stringify(_user));
+    toast(`Welcome back, ${_user.username}!`, 'success');
+    enterApp();
+  } catch(e) { toast(e.message, 'danger'); }
+});
+
+document.getElementById('register-form').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  try {
+    const res = await api.post('/auth/register', { username: document.getElementById('reg-username').value.trim(), email: document.getElementById('reg-email').value.trim(), password: document.getElementById('reg-password').value, role: document.getElementById('reg-role').value });
+    _token = res.token; _user = res.user;
+    localStorage.setItem('inv_token', _token);
+    localStorage.setItem('inv_user', JSON.stringify(_user));
+    toast('Account created! Welcome aboard.', 'success');
+    enterApp();
+  } catch(e) { toast(e.message, 'danger'); }
+});
+
+document.getElementById('logout-btn').addEventListener('click', logout);
+
+function enterApp() {
+  document.getElementById('auth-screen').classList.add('hidden');
+  document.getElementById('app-layout').classList.remove('hidden');
+  document.getElementById('sidebar-username').textContent = _user.username;
+  document.getElementById('sidebar-role').textContent = _user.role;
+  document.getElementById('sidebar-avatar').textContent = _user.username.charAt(0).toUpperCase();
+  document.querySelectorAll('.admin-only').forEach(el => { el.style.display = _user.role === 'admin' ? '' : 'none'; });
+  navigate('dashboard');
+}
+
+// ─── SPA Router ───
+const viewModules = {
+  dashboard: { load: () => Dashboard.load() },
+  products:  { load: () => Products.load() },
+  categories:{ load: () => Categories.load() },
+  suppliers: { load: () => Suppliers.load() },
+  stock:     { load: () => Stock.load() },
+  reports:   { load: () => Reports.load() },
+  activity:  { load: () => ActivityLog.load() }
+};
+
+function navigate(view) {
+  document.querySelectorAll('.page-view').forEach(v => v.classList.add('hidden'));
+  const el = document.getElementById(`view-${view}`);
+  if (el) { el.classList.remove('hidden'); el.classList.add('view-enter'); }
+
+  document.querySelectorAll('.nav-link').forEach(a => {
+    const active = a.getAttribute('data-view') === view;
+    a.classList.toggle('bg-secondary-container', active);
+    a.classList.toggle('text-on-secondary-container', active);
+    a.classList.toggle('font-semibold', active);
+    a.classList.toggle('text-on-surface-variant', !active);
+    a.classList.toggle('hover:bg-surface-container-high', !active);
+    a.classList.toggle('hover:text-on-surface', !active);
+  });
+
+  if (viewModules[view]) viewModules[view].load();
+}
+
+document.querySelectorAll('.nav-link').forEach(a => {
+  a.addEventListener('click', (e) => {
+    e.preventDefault();
+    navigate(a.getAttribute('data-view'));
+  });
+});
+
+// ─── App-level helpers ───
+const App = {
+  downloadPDF(type) {
+    const names = { products: 'products_inventory_report.pdf', low_stock: 'low_stock_alerts_report.pdf', stock: 'stock_movement_report.pdf' };
+    api.blob(`/reports/export-pdf?type=${type}`, names[type] || 'report.pdf');
+  }
+};
+
+// ─── Dashboard ───
+const Dashboard = {
+  async load() {
+    try {
+      const res = await api.get('/dashboard/stats');
+      const { kpi, low_stock_items, recent_stock_activity, chart_stock_trend, chart_category_distribution } = res;
+
+      document.getElementById('kpi-valuation').textContent = `₹${(kpi.total_inventory_value||0).toLocaleString('en-IN',{minimumFractionDigits:2})}`;
+      document.getElementById('kpi-low-stock').textContent = kpi.low_stock_count || 0;
+      document.getElementById('kpi-total-products').textContent = kpi.total_products || 0;
+      document.getElementById('kpi-out-of-stock').textContent = kpi.out_of_stock_count || 0;
+      document.getElementById('kpi-categories-info').textContent = `Across ${kpi.total_categories||0} categories`;
+
+      const lowTbody = document.getElementById('dash-lowstock-tbody');
+      if (!low_stock_items || low_stock_items.length === 0) {
+        lowTbody.innerHTML = `<tr><td colspan="5" class="px-6 py-8 text-center text-secondary font-medium">All items adequately stocked!</td></tr>`;
+      } else {
+        lowTbody.innerHTML = low_stock_items.map(p => `
+          <tr class="hover:bg-secondary-fixed/30 transition-colors group">
+            <td class="px-6 py-4 border-b border-outline-variant/10"><span class="bg-surface-variant text-on-surface-variant px-2 py-1 rounded text-xs font-mono">${p.sku}</span></td>
+            <td class="px-6 py-4 border-b border-outline-variant/10 font-medium">${p.name}</td>
+            <td class="px-6 py-4 border-b border-outline-variant/10">
+              <span class="inline-flex items-center gap-1.5 bg-error-container text-on-error-container px-2.5 py-1 rounded-full text-xs font-medium">
+                <span class="w-1.5 h-1.5 rounded-full bg-error"></span>${p.quantity} ${p.unit}
+              </span>
+            </td>
+            <td class="px-6 py-4 border-b border-outline-variant/10 text-on-surface-variant">${p.reorder_level} ${p.unit}</td>
+            <td class="px-6 py-4 border-b border-outline-variant/10 text-right">
+              <button onclick="openStockModal(${p.id},'IN')" class="text-secondary hover:bg-secondary-container px-3 py-1.5 rounded-md text-sm font-medium transition border border-secondary/20">Restock</button>
+            </td>
+          </tr>`).join('');
+      }
+
+      const actTbody = document.getElementById('dash-activity-tbody');
+      if (!recent_stock_activity || recent_stock_activity.length === 0) {
+        actTbody.innerHTML = `<tr><td colspan="5" class="px-6 py-8 text-center text-on-surface-variant">No recent stock activity logged.</td></tr>`;
+      } else {
+        actTbody.innerHTML = recent_stock_activity.map(m => {
+          const isIn = m.type === 'IN';
+          const ts = (m.timestamp||'').replace('T',' ').substring(0,16);
+          return `<tr class="hover:bg-surface-container-low/50 transition-colors">
+            <td class="px-6 py-4 border-b border-outline-variant/10 text-on-surface-variant text-sm">${ts}</td>
+            <td class="px-6 py-4 border-b border-outline-variant/10 font-medium">${m.product_name}</td>
+            <td class="px-6 py-4 border-b border-outline-variant/10">
+              <span class="inline-flex items-center gap-1.5 ${isIn ? 'bg-secondary-container/50 text-secondary':'bg-error-container/50 text-error'} px-2.5 py-1 rounded text-xs font-semibold">
+                <span class="material-symbols-outlined text-[14px]">${isIn?'arrow_upward':'arrow_downward'}</span>${m.type} (${m.quantity})
+              </span>
+            </td>
+            <td class="px-6 py-4 border-b border-outline-variant/10 text-on-surface-variant text-sm">${m.reason||'-'}</td>
+            <td class="px-6 py-4 border-b border-outline-variant/10 text-on-surface-variant text-sm font-mono">${m.username}</td>
+          </tr>`;
+        }).join('');
+      }
+
+      // Charts
+      const ctxTrend = document.getElementById('chart-stock-trend');
+      if (ctxTrend) {
+        if (trendChart) trendChart.destroy();
+        trendChart = new Chart(ctxTrend, {
+          type: 'bar',
+          data: {
+            labels: chart_stock_trend.labels.length ? chart_stock_trend.labels : ['Current'],
+            datasets: [
+              { label: 'Stock IN', data: chart_stock_trend.stock_in.length ? chart_stock_trend.stock_in : [0], backgroundColor: 'rgba(81,97,97,0.7)', borderColor: '#516161', borderWidth:1, borderRadius:6 },
+              { label: 'Stock OUT', data: chart_stock_trend.stock_out.length ? chart_stock_trend.stock_out : [0], backgroundColor: 'rgba(186,26,26,0.6)', borderColor: '#ba1a1a', borderWidth:1, borderRadius:6 }
+            ]
+          },
+          options: { responsive:true, maintainAspectRatio:false, plugins:{legend:{labels:{color:'#45474c'}}}, scales: { x:{ticks:{color:'#45474c'}, grid:{color:'rgba(0,0,0,0.05)'}}, y:{ticks:{color:'#45474c'}, grid:{color:'rgba(0,0,0,0.05)'}} } }
+        });
+      }
+
+      const ctxCat = document.getElementById('chart-category-distribution');
+      if (ctxCat) {
+        if (catChart) catChart.destroy();
+        catChart = new Chart(ctxCat, {
+          type: 'doughnut',
+          data: {
+            labels: chart_category_distribution.labels.length ? chart_category_distribution.labels : ['No data'],
+            datasets: [{ data: chart_category_distribution.data.length ? chart_category_distribution.data : [1], backgroundColor: ['#d4e6e5','#b8cac9','#091426','#516161','#75777d','#c5c6cd'], borderWidth:0 }]
+          },
+          options: { responsive:true, maintainAspectRatio:false, plugins:{legend:{position:'right', labels:{color:'#45474c', boxWidth:12}}} }
+        });
+      }
+
+      const notifDot = document.getElementById('notif-dot');
+      if (notifDot) notifDot.classList.toggle('hidden', kpi.low_stock_count === 0);
+
+    } catch(e) { toast('Dashboard load error: ' + e.message, 'danger'); }
+  }
+};
+
+// ─── Products ───
+const Products = {
+  list: [], cats: [], sups: [],
+
+  async load() {
+    await this.loadDropdowns();
+    await this.fetch();
+  },
+
+  async loadDropdowns() {
+    try {
+      const [cr, sr] = await Promise.all([api.get('/categories'), api.get('/suppliers')]);
+      this.cats = cr.categories || [];
+      this.sups = sr.suppliers || [];
+      ['prod-category','prod-filter-cat'].forEach(id => {
+        const el = document.getElementById(id);
+        if (!el) return;
+        const defaultOpt = id === 'prod-filter-cat' ? '<option value="">All Categories</option>' : '<option value="">No Category</option>';
+        el.innerHTML = defaultOpt + this.cats.map(c=>`<option value="${c.id}">${c.name}</option>`).join('');
+      });
+      const supSel = document.getElementById('prod-supplier');
+      if (supSel) supSel.innerHTML = '<option value="">No Supplier</option>' + this.sups.map(s=>`<option value="${s.id}">${s.name}</option>`).join('');
+    } catch(e) { console.error('Dropdown load error', e); }
+  },
+
+  async fetch() {
+    const search = document.getElementById('prod-search')?.value || '';
+    const catId = document.getElementById('prod-filter-cat')?.value || '';
+    const status = document.getElementById('prod-filter-status')?.value || '';
+    let q = `/products?search=${encodeURIComponent(search)}`;
+    if (catId) q += `&category_id=${catId}`;
+    if (status) q += `&status=${status}`;
+    try {
+      const res = await api.get(q);
+      this.list = res.products || [];
+      this.render();
+    } catch(e) { toast('Failed to load products: ' + e.message, 'danger'); }
+  },
+
+  render() {
+    const tbody = document.getElementById('products-tbody');
+    const isAdmin = _user && _user.role === 'admin';
+    if (!this.list.length) {
+      tbody.innerHTML = `<tr><td colspan="8" class="px-6 py-10 text-center text-on-surface-variant">No products found.</td></tr>`;
+      return;
+    }
+    tbody.innerHTML = this.list.map(p => {
+      const isOut = p.quantity === 0;
+      const isLow = !isOut && p.is_low_stock;
+      const statusBadge = isOut
+        ? `<span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-error-container/30 text-on-error-container text-[12px] font-semibold"><span class="w-1.5 h-1.5 rounded-full bg-error"></span>OUT OF STOCK</span>`
+        : isLow
+          ? `<span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-error-container/20 text-on-error-container text-[12px] font-semibold"><span class="w-1.5 h-1.5 rounded-full bg-error"></span>LOW STOCK</span>`
+          : `<span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-secondary-fixed/30 text-on-secondary-fixed-variant text-[12px] font-semibold"><span class="w-1.5 h-1.5 rounded-full bg-secondary"></span>IN STOCK</span>`;
+      const rowBorder = isOut ? 'bg-error-container/5 border-l-4 border-l-error' : '';
+      return `
+        <tr class="group hover:bg-secondary-fixed/10 transition-colors ${rowBorder}">
+          <td class="px-6 py-5 font-mono text-[13px] text-on-surface-variant">${p.sku}</td>
+          <td class="px-6 py-5 text-[15px] font-semibold text-on-surface">${p.name}</td>
+          <td class="px-6 py-5"><span class="inline-flex items-center px-2.5 py-1 rounded-md bg-surface-container text-[12px] font-medium text-on-surface-variant border border-outline-variant/20">${p.category_name}</span></td>
+          <td class="px-6 py-5 text-on-surface-variant text-sm">${p.supplier_name}</td>
+          <td class="px-6 py-5 text-right font-medium">₹${parseFloat(p.price).toFixed(2)}</td>
+          <td class="px-6 py-5 text-right"><div class="flex flex-col items-end"><span class="font-semibold ${isLow||isOut?'text-error':'text-on-surface'}">${p.quantity}</span><span class="text-[11px] text-on-surface-variant">${p.unit}</span></div></td>
+          <td class="px-6 py-5 text-center">${statusBadge}</td>
+          <td class="px-6 py-5">
+            <div class="flex items-center justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+              <button data-action="edit-prod" data-id="${p.id}" title="Edit" class="p-1.5 rounded text-on-surface-variant hover:text-secondary hover:bg-secondary-container/30 transition"><span class="material-symbols-outlined text-[18px]">edit</span></button>
+              <button data-action="stock-prod" data-id="${p.id}" title="Stock In" class="p-1.5 rounded text-on-surface-variant hover:text-secondary hover:bg-secondary-container/30 transition"><span class="material-symbols-outlined text-[18px]">add_box</span></button>
+              ${isAdmin ? `<button data-action="del-prod" data-id="${p.id}" title="Delete" class="p-1.5 rounded text-on-surface-variant hover:text-error hover:bg-error-container/30 transition"><span class="material-symbols-outlined text-[18px]">delete</span></button>` : ''}
+            </div>
+          </td>
+        </tr>`;
+    }).join('');
+    // Event delegation
+    tbody.onclick = (e) => {
+      const btn = e.target.closest('button[data-action]');
+      if (!btn) return;
+      const id = parseInt(btn.dataset.id);
+      const action = btn.dataset.action;
+      if (action === 'edit-prod') Products.openModal(id);
+      else if (action === 'stock-prod') openStockModal(id, 'IN');
+      else if (action === 'del-prod') Products.del(id);
+    };
+  },
+
+  openModal(id = null) {
+    const modal = document.getElementById('modal-product');
+    document.getElementById('form-product').reset();
+    document.getElementById('prod-id').value = '';
+    document.getElementById('modal-product-title').textContent = id ? 'Edit Product' : 'Add Product';
+    if (id) {
+      const p = this.list.find(x => x.id === id);
+      if (p) {
+        document.getElementById('prod-id').value = p.id;
+        document.getElementById('prod-sku').value = p.sku;
+        document.getElementById('prod-name').value = p.name;
+        document.getElementById('prod-unit').value = p.unit;
+        document.getElementById('prod-price').value = p.price;
+        document.getElementById('prod-quantity').value = p.quantity;
+        document.getElementById('prod-reorder').value = p.reorder_level;
+        document.getElementById('prod-category').value = p.category_id || '';
+        document.getElementById('prod-supplier').value = p.supplier_id || '';
+      }
+    }
+    modal.classList.remove('hidden');
+  },
+
+  closeModal() { document.getElementById('modal-product').classList.add('hidden'); },
+
+  async save(e) {
+    e.preventDefault();
+    const id = document.getElementById('prod-id').value;
+    const payload = {
+      sku: document.getElementById('prod-sku').value.trim(),
+      name: document.getElementById('prod-name').value.trim(),
+      unit: document.getElementById('prod-unit').value.trim() || 'pcs',
+      price: parseFloat(document.getElementById('prod-price').value) || 0,
+      quantity: parseInt(document.getElementById('prod-quantity').value) || 0,
+      reorder_level: parseInt(document.getElementById('prod-reorder').value) || 10,
+      category_id: document.getElementById('prod-category').value ? parseInt(document.getElementById('prod-category').value) : null,
+      supplier_id: document.getElementById('prod-supplier').value ? parseInt(document.getElementById('prod-supplier').value) : null
+    };
+    try {
+      id ? await api.put(`/products/${id}`, payload) : await api.post('/products', payload);
+      toast(id ? 'Product updated.' : 'Product added.', 'success');
+      this.closeModal();
+      await this.fetch();
+    } catch(e) { toast(e.message, 'danger'); }
+  },
+
+  async del(id) {
+    const p = this.list.find(x => x.id === id);
+    const name = p ? p.name : `Product #${id}`;
+    if (!confirm(`Delete product "${name}"?`)) return;
+    try { await api.del(`/products/${id}`); toast(`Deleted "${name}".`, 'info'); await this.fetch(); }
+    catch(e) { toast(e.message, 'danger'); }
+  }
+};
+
+// ─── Categories ───
+const Categories = {
+  list: [],
+
+  async load() {
+    try {
+      const res = await api.get('/categories');
+      this.list = res.categories || [];
+      this.render();
+    } catch(e) { toast('Failed to load categories: ' + e.message, 'danger'); }
+  },
+
+  render() {
+    const tbody = document.getElementById('categories-tbody');
+    const isAdmin = _user && _user.role === 'admin';
+    if (!this.list.length) { tbody.innerHTML = `<tr><td colspan="4" class="px-6 py-8 text-center text-on-surface-variant">No categories yet.</td></tr>`; return; }
+    tbody.innerHTML = this.list.map(c => `
+      <tr class="hover:bg-secondary-fixed/10 transition-colors group">
+        <td class="px-6 py-5 font-semibold text-on-surface">${c.name}</td>
+        <td class="px-6 py-5 text-on-surface-variant text-sm">${c.description || '<span class="italic opacity-50">No description</span>'}</td>
+        <td class="px-6 py-5"><span class="inline-flex items-center px-2.5 py-1 rounded-full bg-secondary-fixed/30 text-on-secondary-fixed-variant text-xs font-semibold">${c.product_count} Products</span></td>
+        <td class="px-6 py-5 text-right">
+          ${isAdmin ? `
+            <button data-action="edit-cat" data-id="${c.id}" class="p-1.5 rounded text-on-surface-variant hover:text-secondary hover:bg-secondary-container/30 transition"><span class="material-symbols-outlined text-[18px]">edit</span></button>
+            <button data-action="del-cat" data-id="${c.id}" class="p-1.5 rounded text-on-surface-variant hover:text-error hover:bg-error-container/30 transition"><span class="material-symbols-outlined text-[18px]">delete</span></button>
+          ` : '<span class="text-on-surface-variant/50 text-xs">Read only</span>'}
+        </td>
+      </tr>`).join('');
+    tbody.onclick = (e) => {
+      const btn = e.target.closest('button[data-action]');
+      if (!btn) return;
+      const id = parseInt(btn.dataset.id);
+      if (btn.dataset.action === 'edit-cat') Categories.openModal(id);
+      else if (btn.dataset.action === 'del-cat') Categories.del(id);
+    };
+  },
+
+  openModal(id = null) {
+    const modal = document.getElementById('modal-category');
+    document.getElementById('form-category').reset();
+    document.getElementById('cat-id').value = '';
+    document.getElementById('modal-category-title').textContent = id ? 'Edit Category' : 'Add Category';
+    if (id) {
+      const c = this.list.find(x => x.id === id);
+      if (c) { document.getElementById('cat-id').value = c.id; document.getElementById('cat-name').value = c.name; document.getElementById('cat-description').value = c.description || ''; }
+    }
+    modal.classList.remove('hidden');
+  },
+
+  closeModal() { document.getElementById('modal-category').classList.add('hidden'); },
+
+  async save(e) {
+    e.preventDefault();
+    const id = document.getElementById('cat-id').value;
+    const payload = { name: document.getElementById('cat-name').value.trim(), description: document.getElementById('cat-description').value.trim() };
+    try {
+      id ? await api.put(`/categories/${id}`, payload) : await api.post('/categories', payload);
+      toast(id ? 'Category updated.' : 'Category created.', 'success');
+      this.closeModal(); await this.load();
+    } catch(e) { toast(e.message, 'danger'); }
+  },
+
+  async del(id) {
+    const c = this.list.find(x => x.id === id);
+    const name = c ? c.name : `Category #${id}`;
+    if (!confirm(`Delete category "${name}"?`)) return;
+    try { await api.del(`/categories/${id}`); toast(`Deleted "${name}".`, 'info'); await this.load(); }
+    catch(e) { toast(e.message, 'danger'); }
+  }
+};
+
+// ─── Suppliers ───
+const Suppliers = {
+  list: [],
+
+  async load() {
+    try { const res = await api.get('/suppliers'); this.list = res.suppliers || []; this.render(); }
+    catch(e) { toast('Failed to load suppliers: ' + e.message, 'danger'); }
+  },
+
+  render() {
+    const tbody = document.getElementById('suppliers-tbody');
+    const isAdmin = _user && _user.role === 'admin';
+    if (!this.list.length) { tbody.innerHTML = `<tr><td colspan="6" class="px-6 py-8 text-center text-on-surface-variant">No suppliers yet.</td></tr>`; return; }
+    tbody.innerHTML = this.list.map(s => `
+      <tr class="hover:bg-secondary-fixed/10 transition-colors group">
+        <td class="px-6 py-5 font-semibold text-on-surface">${s.name}</td>
+        <td class="px-6 py-5 text-on-surface-variant text-sm">${s.contact_name || '-'}</td>
+        <td class="px-6 py-5"><a href="mailto:${s.email}" class="text-secondary hover:underline text-sm">${s.email || '-'}</a></td>
+        <td class="px-6 py-5 text-on-surface-variant text-sm font-mono">${s.phone || '-'}</td>
+        <td class="px-6 py-5"><span class="inline-flex items-center px-2.5 py-1 rounded-full bg-secondary-fixed/30 text-on-secondary-fixed-variant text-xs font-semibold">${s.product_count} Products</span></td>
+        <td class="px-6 py-5 text-right">
+          ${isAdmin ? `
+            <button data-action="edit-sup" data-id="${s.id}" class="p-1.5 rounded text-on-surface-variant hover:text-secondary hover:bg-secondary-container/30 transition"><span class="material-symbols-outlined text-[18px]">edit</span></button>
+            <button data-action="del-sup" data-id="${s.id}" class="p-1.5 rounded text-on-surface-variant hover:text-error hover:bg-error-container/30 transition"><span class="material-symbols-outlined text-[18px]">delete</span></button>
+          ` : '<span class="text-on-surface-variant/50 text-xs">Read only</span>'}
+        </td>
+      </tr>`).join('');
+    tbody.onclick = (e) => {
+      const btn = e.target.closest('button[data-action]');
+      if (!btn) return;
+      const id = parseInt(btn.dataset.id);
+      if (btn.dataset.action === 'edit-sup') Suppliers.openModal(id);
+      else if (btn.dataset.action === 'del-sup') Suppliers.del(id);
+    };
+  },
+
+  openModal(id = null) {
+    document.getElementById('form-supplier').reset();
+    document.getElementById('sup-id').value = '';
+    document.getElementById('modal-supplier-title').textContent = id ? 'Edit Supplier' : 'Add Supplier';
+    if (id) {
+      const s = this.list.find(x => x.id === id);
+      if (s) { document.getElementById('sup-id').value = s.id; document.getElementById('sup-name').value = s.name; document.getElementById('sup-contact').value = s.contact_name||''; document.getElementById('sup-email').value = s.email||''; document.getElementById('sup-phone').value = s.phone||''; document.getElementById('sup-address').value = s.address||''; }
+    }
+    document.getElementById('modal-supplier').classList.remove('hidden');
+  },
+
+  closeModal() { document.getElementById('modal-supplier').classList.add('hidden'); },
+
+  async save(e) {
+    e.preventDefault();
+    const id = document.getElementById('sup-id').value;
+    const payload = { name: document.getElementById('sup-name').value.trim(), contact_name: document.getElementById('sup-contact').value.trim(), email: document.getElementById('sup-email').value.trim(), phone: document.getElementById('sup-phone').value.trim(), address: document.getElementById('sup-address').value.trim() };
+    try {
+      id ? await api.put(`/suppliers/${id}`, payload) : await api.post('/suppliers', payload);
+      toast(id ? 'Supplier updated.' : 'Supplier added.', 'success');
+      this.closeModal(); await this.load();
+    } catch(e) { toast(e.message, 'danger'); }
+  },
+
+  async del(id) {
+    const s = this.list.find(x => x.id === id);
+    const name = s ? s.name : `Supplier #${id}`;
+    if (!confirm(`Delete supplier "${name}"?`)) return;
+    try { await api.del(`/suppliers/${id}`); toast(`Deleted "${name}".`, 'info'); await this.load(); }
+    catch(e) { toast(e.message, 'danger'); }
+  }
+};
+
+// ─── Stock ───
+function openStockModal(productId = null, defaultType = 'IN') {
+  document.getElementById('form-stock').reset();
+  document.getElementById('stock-type').value = defaultType;
+  api.get('/products').then(res => {
+    const prods = res.products || [];
+    document.getElementById('stock-product').innerHTML = '<option value="">-- Select Product --</option>' + prods.map(p => `<option value="${p.id}" ${p.id === productId ? 'selected' : ''}>${p.sku} — ${p.name} (Stock: ${p.quantity} ${p.unit})</option>`).join('');
+  });
+  document.getElementById('modal-stock').classList.remove('hidden');
+}
+
+function closeStockModal() { document.getElementById('modal-stock').classList.add('hidden'); }
+
+const Stock = {
+  async load() { await this.loadHistory(); },
+
+  async loadHistory() {
+    const type = document.getElementById('stock-type-filter')?.value || '';
+    let q = '/stock/history?limit=150';
+    if (type) q += `&type=${type}`;
+    try {
+      const res = await api.get(q);
+      const tbody = document.getElementById('stock-tbody');
+      const movs = res.movements || [];
+      if (!movs.length) { tbody.innerHTML = `<tr><td colspan="7" class="px-6 py-8 text-center text-on-surface-variant">No stock movements logged yet.</td></tr>`; return; }
+      tbody.innerHTML = movs.map(m => {
+        const isIn = m.type === 'IN';
+        const ts = (m.timestamp||'').replace('T',' ').substring(0,16);
+        return `<tr class="hover:bg-surface-container-low/50 transition-colors">
+          <td class="px-6 py-4 text-on-surface-variant text-sm">${ts}</td>
+          <td class="px-6 py-4 font-mono text-[13px] text-on-surface-variant">${m.product_sku}</td>
+          <td class="px-6 py-4 font-medium text-on-surface">${m.product_name}</td>
+          <td class="px-6 py-4"><span class="inline-flex items-center gap-1.5 ${isIn?'bg-secondary-container/50 text-secondary':'bg-error-container/50 text-error'} px-2.5 py-1 rounded text-xs font-semibold"><span class="material-symbols-outlined text-[14px]">${isIn?'arrow_upward':'arrow_downward'}</span>${m.type}</span></td>
+          <td class="px-6 py-4 font-semibold ${isIn?'text-secondary':'text-error'}">${isIn?'+':'-'}${m.quantity}</td>
+          <td class="px-6 py-4 text-on-surface-variant text-sm">${m.reason||'-'}</td>
+          <td class="px-6 py-4 text-on-surface-variant text-sm font-mono">${m.username}</td>
+        </tr>`;
+      }).join('');
+    } catch(e) { toast('Failed to load stock history: ' + e.message, 'danger'); }
+  },
+
+  async save(e) {
+    e.preventDefault();
+    const productId = document.getElementById('stock-product').value;
+    const type = document.getElementById('stock-type').value;
+    const quantity = parseInt(document.getElementById('stock-qty').value) || 0;
+    const reason = document.getElementById('stock-reason').value.trim();
+    if (!productId || quantity <= 0) { toast('Please select a product and enter a valid quantity.', 'warning'); return; }
+    try {
+      await api.post('/stock/movement', { product_id: parseInt(productId), type, quantity, reason });
+      toast(`Stock ${type} recorded — quantity auto-updated.`, 'success');
+      closeStockModal();
+      await this.loadHistory();
+      if (Products.list.length) await Products.fetch();
+    } catch(e) { toast(e.message, 'danger'); }
+  }
+};
+
+// ─── Reports ───
+const Reports = {
+  async load() {
+    try {
+      const res = await api.get('/reports/analytics');
+      document.getElementById('rep-total-prods').textContent = res.summary.total_products || 0;
+      document.getElementById('rep-total-val').textContent = `₹${(res.summary.total_valuation||0).toLocaleString('en-IN',{minimumFractionDigits:2})}`;
+      document.getElementById('rep-low-count').textContent = res.summary.low_stock_count || 0;
+      const tbody = document.getElementById('rep-active-tbody');
+      if (!res.most_active_products || !res.most_active_products.length) {
+        tbody.innerHTML = `<tr><td colspan="4" class="px-6 py-8 text-center text-on-surface-variant">No stock movements logged yet.</td></tr>`;
+        return;
+      }
+      tbody.innerHTML = res.most_active_products.map((p,i) => `
+        <tr class="hover:bg-secondary-fixed/10 transition-colors">
+          <td class="px-6 py-4 font-bold text-on-surface">#${i+1}</td>
+          <td class="px-6 py-4 font-mono text-[13px] text-on-surface-variant">${p.sku}</td>
+          <td class="px-6 py-4 font-semibold text-on-surface">${p.name}</td>
+          <td class="px-6 py-4"><span class="inline-flex items-center px-3 py-1 rounded-full bg-secondary-fixed/30 text-on-secondary-fixed-variant text-xs font-semibold">${p.total_volume} units moved</span></td>
+        </tr>`).join('');
+    } catch(e) { toast('Failed to load analytics: ' + e.message, 'danger'); }
+  }
+};
+
+// ─── Activity Log ───
+const ActivityLog = {
+  async load() {
+    try {
+      const res = await api.get('/activity-log?limit=100');
+      const container = document.getElementById('activity-timeline');
+      const acts = res.activities || [];
+      if (!acts.length) { container.innerHTML = `<p class="text-center text-on-surface-variant py-8">No system activities logged.</p>`; return; }
+      const colors = { CREATE:'text-secondary border-secondary', DELETE:'text-error border-error', UPDATE:'text-secondary border-secondary', STOCK_IN:'text-secondary border-secondary', STOCK_OUT:'text-error border-error', LOGIN:'text-on-surface-variant border-outline-variant', REGISTER:'text-secondary border-secondary' };
+      const icons = { CREATE:'add_circle', DELETE:'remove_circle', UPDATE:'edit', STOCK_IN:'arrow_upward', STOCK_OUT:'arrow_downward', LOGIN:'login', REGISTER:'person_add' };
+      container.innerHTML = `<div class="relative pl-8 space-y-0">
+        <div class="absolute left-3 top-0 bottom-0 w-px bg-outline-variant/30"></div>
+        ${acts.map(a => {
+          const ts = (a.timestamp||'').replace('T',' ').substring(0,19);
+          const cls = colors[a.action] || colors.LOGIN;
+          const ico = icons[a.action] || 'info';
+          return `<div class="relative pb-6">
+            <div class="absolute -left-[17px] top-1 w-4 h-4 rounded-full bg-surface-container-lowest border-2 ${cls.split(' ')[1]||'border-outline-variant'} flex items-center justify-center">
+              <span class="material-symbols-outlined text-[10px] ${cls.split(' ')[0]||''}">${ico}</span>
+            </div>
+            <div class="bg-surface-container-lowest rounded-xl border border-outline-variant/30 px-5 py-4 ml-2 hover:shadow-sm transition-shadow">
+              <div class="flex items-center justify-between mb-1">
+                <div class="flex items-center gap-2">
+                  <span class="font-semibold text-on-surface text-sm">${a.username}</span>
+                  <span class="text-[11px] px-2 py-0.5 rounded-full font-semibold uppercase tracking-wider border ${cls}">${a.action}</span>
+                  <span class="text-[11px] text-on-surface-variant uppercase tracking-wider">${a.entity_type}</span>
+                </div>
+                <span class="text-[11px] text-on-surface-variant font-mono">${ts}</span>
+              </div>
+              <p class="text-sm text-on-surface-variant">${a.details||''}</p>
+            </div>
+          </div>`;
+        }).join('')}
+      </div>`;
+    } catch(e) { toast('Failed to load activity log: ' + e.message, 'danger'); }
+  }
+};
+
+// ─── Init ───
+window.addEventListener('DOMContentLoaded', () => {
+  if (_token && _user) {
+    enterApp();
+  }
+});
+</script>
+</body>
+</html>
